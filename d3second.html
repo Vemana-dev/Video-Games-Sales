@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+  <head>    
+    <meta charset="utf-8">
+
+    <title> DATS 6401 - Final Project - Cheng Miao </title>
+
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+    <script src="http://d3js.org/d3.v2.js"></script>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+
+  <!-- Note: I made good use of the sample code provided by the D3JS community and extended it to fit my needs to create this simple dashboard -->
+<style type="text/css">
+body{
+    background-color: linen;
+    font-family: "Open Sans", Helvetica, sans-serif;
+    }
+#pieChart {    
+  position: absolute;
+  top:100px;
+  left:50px;
+  width:400px;
+  height: 400px; 
+}
+
+
+#barChart {
+  position: absolute;
+  top: 600px;
+  left: 50px;
+  height: 600px;
+}
+.slice {
+   font-size: 12pt;
+   font-family: Verdana;
+   fill: white; //svg specific - instead of color
+   font-weight: bold; 
+      } 
+
+div.tooltip { 
+    position: absolute;     
+    text-align: center;     
+    width: 150px;          
+    height: 35px;         
+    padding: 2px;       
+    font: 13px sans-serif;
+    font-weight: bold;    
+    background: lightsteelblue; 
+    border: 0px;    
+    border-radius: 8px;     
+    pointer-events: none;     
+}
+
+  
+table {
+  border-collapse:collapse;
+  border: 0px;  
+  font-family: Verdana; 
+  color: #5C5558;
+  font-size: 12px;
+  text-align: right;      
+}
+td {
+  padding-left: 10px;   
+}
+
+         
+    </style>
+  </head>
+
+
+<body>
+<div id="canvas-svg">
+    <div>
+      <h1>Video Games Sales in Genre</h1>
+  </div>
+  <div>
+    <h4></h4>
+  </div>
+  <div>
+      <div id="pieChart"></div>
+      <div id="barChart"></div>  
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    
+/*
+################ FORMATS ##################
+-------------------------------------------
+*/
+var   formatAsPercentage = d3.format("%"),
+    formatAsPercentage1Dec = d3.format(".1%"),
+    formatAsInteger = d3.format(","),
+    fsec = d3.time.format("%S s"),
+    fmin = d3.time.format("%M m"),
+    fhou = d3.time.format("%H h"),
+    fwee = d3.time.format("%a"),
+    fdat = d3.time.format("%d d"),
+    fmon = d3.time.format("%b")
+    ;
+/*
+############# PIE CHART ###################
+-------------------------------------------
+*/
+function dsPieChart(){
+ /* var dataset = [
+      {category: "Sam", measure: 0.30},
+        {category: "Peter", measure: 0.25},
+        {category: "Jenn", measure: 0.15},
+        {category: "Rick", measure: 0.05},
+        {category: "Laura", measure: 0.18},
+        {category: "Mike", measure:0.04},
+        {category: "Steve", measure: 0.03}
+        ]
+        ;
+  */
+var dataset = [{category: 'Role-Playing', measure: 926.3199}, 
+              {category: 'Puzzle', measure: 743.0100},
+              {category: 'Shooter', measure: 1032.0499},
+              {category: 'Misc', measure: 806.0899},
+              {category: 'Fighting', measure: 548.899},
+              {category: 'Sports', measure: 1330.5499},
+              {category: 'Platform', measure: 829.4799},
+              {category: 'Strategy', measure: 574.0000},
+              {category: 'Adventure', measure: 334.5500},
+              {category: 'Action', measure: 1745.1499},
+              {category: 'Simulation', measure: 390.2499},
+              {category: 'Racing', measure: 732.0399}];
+  var width = 500,
+       height = 500,
+       outerRadius = Math.min(width, height) / 2,
+       innerRadius = outerRadius * .999,   
+       // for animation
+       innerRadiusFinal = outerRadius * .5,
+       innerRadiusFinal3 = outerRadius* .45,
+       color = d3.scale.category20()    //builtin range of colors
+       ;
+      
+  var vis = d3.select("#pieChart")
+       .append("svg:svg")              //create the SVG element inside the <body>
+       .data([dataset])                   //associate our data with the document
+           .attr("width", width)           //set the width and height of our visualization (these will be attributes of the <svg> tag
+           .attr("height", height)
+          .append("svg:g")                //make a group to hold our pie chart
+           .attr("transform", "translate(" + outerRadius + "," + outerRadius + ")")    //move the center of the pie chart from 0, 0 to radius, radius
+        ;
+        
+   var arc = d3.svg.arc()              //this will create <path> elements for us using arc data
+          .outerRadius(outerRadius).innerRadius(innerRadius);
+   
+   // for animation
+   var arcFinal = d3.svg.arc().innerRadius(innerRadiusFinal).outerRadius(outerRadius);
+  var arcFinal3 = d3.svg.arc().innerRadius(innerRadiusFinal3).outerRadius(outerRadius);
+   var pie = d3.layout.pie()           //this will create arc data for us given a list of values
+        .value(function(d) { return d.measure; });    //we must tell it out to access the value of each element in our data array
+   var arcs = vis.selectAll("g.slice")     //this selects all <g> elements with class slice (there aren't any yet)
+        .data(pie)                          //associate the generated pie data (an array of arcs, each having startAngle, endAngle and value properties) 
+        .enter()                            //this will create <g> elements for every "extra" data element that should be associated with a selection. The result is creating a <g> for every object in the data array
+            .append("svg:g")                //create a group to hold each slice (we will have a <path> and a <text> element associated with each slice)
+               .attr("class", "slice")    //allow us to style things in the slices (like text)
+               .on("mouseover", mouseover)
+            .on("mouseout", mouseout)
+            .on("click", up)
+            ;
+            
+        arcs.append("svg:path")
+               .attr("fill", function(d, i) { return color(i); } ) //set the color for each slice to be chosen from the color function defined above
+               .attr("d", arc)     //this creates the actual SVG path using the associated data (pie) with the arc drawing function
+          .append("svg:title") //mouseover title showing the figures
+           .text(function(d) { return d.data.category + ": " + formatAsPercentage(d.data.measure); });      
+        d3.selectAll("g.slice").selectAll("path").transition()
+          .duration(750)
+          .delay(10)
+          .attr("d", arcFinal )
+          ;
+  
+    // Add a label to the larger arcs, translated to the arc centroid and rotated.
+    // source: http://bl.ocks.org/1305337#index.html
+    arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; })
+        .append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) { return "translate(" + arcFinal.centroid(d) + ")rotate(" + angle(d) + ")"; })
+        //.text(function(d) { return formatAsPercentage(d.value); })
+        .text(function(d) { return d.data.category; })
+        ;
+     
+     // Computes the label angle of an arc, converting from radians to degrees.
+    function angle(d) {
+        var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+        return a > 90 ? a - 180 : a;
+    }
+        
+    
+    // Pie chart title      
+    vis.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .text("Genre of a Game")
+        .attr("class","title")
+        ;       
+    
+  function mouseover() {
+    d3.select(this).select("path").transition()
+        .duration(750)
+              //.attr("stroke","red")
+              //.attr("stroke-width", 1.5)
+              .attr("d", arcFinal3)
+              ;
+  }
+  
+  function mouseout() {
+    d3.select(this).select("path").transition()
+        .duration(750)
+              //.attr("stroke","blue")
+              //.attr("stroke-width", 1.5)
+              .attr("d", arcFinal)
+              ;
+  }
+  
+  function up(d, i) {
+  
+        /* update bar chart when user selects piece of the pie chart */
+        //updateBarChart(dataset[i].category);
+        updateBarChart(d.data.category, color(i));
+       
+  }
+}
+dsPieChart();
+function sunburst_pie(){
+  //var margin = {top: 350, right: 480, bottom: 350, left: 480},
+  //radius = Math.min(margin.top, margin.right, margin.bottom, margin.left) - 10;
+  var hue = d3.scale.category10();
+  var luminance = d3.scale.sqrt()
+      .domain([0, 1e6])
+      .clamp(true)
+      .range([90, 20]);
+}
+/*
+############# BAR CHART ###################
+-------------------------------------------
+*/
+/*var datasetBarChart = [
+{ group: "All", category: "Oranges", measure: 63850.4963 }, 
+{ group: "All", category: "Apples", measure: 78258.0845 }, 
+{ group: "All", category: "Grapes", measure: 60610.2355 }, 
+{ group: "All", category: "Figs", measure: 30493.1686 }, 
+{ group: "All", category: "Mangos", measure: 56097.0151 }, 
+{ group: "Sam", category: "Oranges", measure: 19441.5648 }, 
+{ group: "Sam", category: "Apples", measure: 25922.0864 }, 
+{ group: "Sam", category: "Grapes", measure: 9720.7824 }, 
+{ group: "Sam", category: "Figs", measure: 6480.5216 }, 
+{ group: "Sam", category: "Mangos", measure: 19441.5648 }, 
+{ group: "Peter", category: "Oranges", measure: 22913.2728 }, 
+{ group: "Peter", category: "Apples", measure: 7637.7576 }, 
+{ group: "Peter", category: "Grapes", measure: 23549.7526 }, 
+{ group: "Peter", category: "Figs", measure: 1909.4394 }, 
+{ group: "Peter", category: "Mangos", measure: 7637.7576 }, 
+{ group: "Jenn", category: "Oranges", measure: 1041.5124 }, 
+{ group: "Jenn", category: "Apples", measure: 2430.1956 }, 
+{ group: "Jenn", category: "Grapes", measure: 15275.5152 }, 
+{ group: "Jenn", category: "Figs", measure: 4166.0496 }, 
+{ group: "Jenn", category: "Mangos", measure: 11803.8072 }, 
+{ group: "Rick", category: "Oranges", measure: 7406.3104 }, 
+{ group: "Rick", category: "Apples", measure: 2545.9192 }, 
+{ group: "Rick", category: "Grapes", measure: 1620.1304 }, 
+{ group: "Rick", category: "Figs", measure: 8563.5464 }, 
+{ group: "Rick", category: "Mangos", measure: 3008.8136 }, 
+{ group: "Laura", category: "Oranges", measure: 7637.7576 }, 
+{ group: "Laura", category: "Apples", measure: 35411.4216 }, 
+{ group: "Laura", category: "Grapes", measure: 8332.0992 }, 
+{ group: "Laura", category: "Figs", measure: 6249.0744 }, 
+{ group: "Laura", category: "Mangos", measure: 11803.8072 }, 
+{ group: "Mike", category: "Oranges", measure: 3182.399 }, 
+{ group: "Mike", category: "Apples", measure: 867.927 }, 
+{ group: "Mike", category: "Grapes", measure: 1808.18125 }, 
+{ group: "Mike", category: "Figs", measure: 795.59975 }, 
+{ group: "Mike", category: "Mangos", measure: 578.618 }, 
+{ group: "Steve", category: "Oranges", measure: 2227.6793 }, 
+{ group: "Steve", category: "Apples", measure: 3442.7771 }, 
+{ group: "Steve", category: "Grapes", measure: 303.77445 }, 
+{ group: "Steve", category: "Figs", measure: 2328.93745 }, 
+{ group: "Steve", category: "Mangos", measure: 1822.6467 }, 
+]
+;
+*/
+var datasetBarChart =  [{group:"Misc", category:"3DS", measure:10.48},{group:"Strategy", category:"SAT", measure:3.24},{group:"Sports", category:"GC", measure:25.49},{group:"Action", category:"PS2", measure:270.77},{group:"Shooter", category:"SAT", measure:3.98},{group:"Sports", category:"SNES", measure:17.87},{group:"Sports", category:"Wii", measure:291.91},{group:"Shooter", category:"PS3", measure:194.37},{group:"Racing", category:"XB", measure:31.49},{group:"Action", category:"PS3", measure:307.48},{group:"Action", category:"GC", measure:37.56},{group:"Platform", category:"WiiU", measure:21.24},{group:"Fighting", category:"PS4", measure:8.04},{group:"Puzzle", category:"SNES", measure:6.38},{group:"Puzzle", category:"XB", measure:0.42},{group:"Adventure", category:"PSP", measure:10.44},{group:"Platform", category:"PSP", measure:17.19},{group:"Role-Playing", category:"NES", measure:18.78},{group:"Strategy", category:"GB", measure:8.05},{group:"Misc", category:"N64", measure:11.19},{group:"Adventure", category:"N64", measure:0.45},{group:"Misc", category:"GC", measure:16.29},{group:"Fighting", category:"2600", measure:1.24},{group:"Racing", category:"N64", measure:40.09},{group:"Fighting", category:"SAT", measure:8.52},{group:"Racing", category:"PC", measure:4.06},{group:"Action", category:"X360", measure:242.06},{group:"Misc", category:"PSV", measure:5.18},{group:"Shooter", category:"WiiU", measure:6.17},{group:"Adventure", category:"SNES", measure:1.5},{group:"Sports", category:"PS4", measure:50.07},{group:"Puzzle", category:"PSV", measure:0.2},{group:"Racing", category:"DS", measure:38.64},{group:"Adventure", category:"X360", measure:15.21},{group:"Fighting", category:"DS", measure:7.2},{group:"Adventure", category:"PS4", measure:4.7},{group:"Puzzle", category:"GBA", measure:11.69},{group:"Racing", category:"WiiU", measure:7.77},{group:"Racing", category:"GC", measure:21.89},{group:"Racing", category:"GEN", measure:0.26},{group:"Action", category:"PS4", measure:87.06},{group:"Fighting", category:"X360", measure:37.64},{group:"Platform", category:"Wii", measure:90.74},{group:"Racing", category:"2600", measure:2.91},{group:"Shooter", category:"XOne", measure:51.61},{group:"Fighting", category:"XB", measure:13.55},{group:"Simulation", category:"PC", measure:51.91},{group:"Misc", category:"PS2", measure:100.43},{group:"Action", category:"NES", measure:28.75},{group:"Sports", category:"DC", measure:3.66},{group:"Strategy", category:"GC", measure:4.32},{group:"Puzzle", category:"PS2", measure:5.9},{group:"Sports", category:"PS3", measure:135.56},{group:"Adventure", category:"PS3", measure:22.9},{group:"Fighting", category:"PSP", measure:21.97},{group:"Shooter", category:"PSV", measure:4.57},{group:"Strategy", category:"PS3", measure:4.94},{group:"Fighting", category:"3DS", measure:10.46},{group:"Adventure", category:"XB", measure:3.06},{group:"Action", category:"PSP", measure:64.04},{group:"Sports", category:"DS", measure:31.76},{group:"Sports", category:"XOne", measure:23.97},{group:"Platform", category:"GBA", measure:78.18},{group:"Sports", category:"WiiU", measure:3.32},{group:"Shooter", category:"N64", measure:19.27},{group:"Shooter", category:"GC", measure:13.63},{group:"Racing", category:"DC", measure:2.65},{group:"Action", category:"PC", measure:31.53},{group:"Platform", category:"DC", measure:2.54},{group:"Racing", category:"PS2", measure:156.28},{group:"Puzzle", category:"3DS", measure:5.57},{group:"Fighting", category:"PS2", measure:92.6},{group:"Fighting", category:"PC", measure:0.27},{group:"Misc", category:"PSP", measure:13.93},{group:"Platform", category:"SAT", measure:0.76},{group:"Platform", category:"2600", measure:13.27},{group:"Adventure", category:"GBA", measure:12.69},{group:"Puzzle", category:"PS4", measure:0.02},{group:"Shooter", category:"NES", measure:35.62},{group:"Misc", category:"Wii", measure:220.5},{group:"Role-Playing", category:"GC", measure:13.15},{group:"Action", category:"Wii", measure:117.99},{group:"Misc", category:"SCD", measure:0.1},{group:"Role-Playing", category:"GB", measure:88.24},{group:"Strategy", category:"PSP", measure:10.29},{group:"Action", category:"PSV", measure:20.0},{group:"Racing", category:"NES", measure:9.78},{group:"Shooter", category:"PSP", measure:19.36},{group:"Shooter", category:"GBA", measure:3.6},{group:"Sports", category:"GB", measure:9.05},{group:"Role-Playing", category:"Wii", measure:13.95},{group:"Simulation", category:"GBA", measure:5.91},{group:"Role-Playing", category:"XB", measure:13.51},{group:"Action", category:"DC", measure:1.26},{group:"Platform", category:"N64", measure:36.13},{group:"Simulation", category:"GC", measure:8.59},{group:"Action", category:"GBA", measure:55.06},{group:"Fighting", category:"GC", measure:18.43},{group:"Simulation", category:"Wii", measure:36.97},{group:"Action", category:"GEN", measure:2.74},{group:"Platform", category:"PS3", measure:30.33},{group:"Action", category:"XB", measure:49.07},{group:"Misc", category:"X360", measure:91.63},{group:"Shooter", category:"GEN", measure:0.13},{group:"Sports", category:"X360", measure:138.96},{group:"Shooter", category:"SNES", measure:6.07},{group:"Platform", category:"XOne", measure:0.81},{group:"Sports", category:"NES", measure:26.85},{group:"Role-Playing", category:"DS", measure:126.72},{group:"Fighting", category:"GEN", measure:5.9},{group:"Shooter", category:"DS", measure:8.2},{group:"Simulation", category:"PSP", measure:6.28},{group:"Fighting", category:"SNES", measure:26.95},{group:"Platform", category:"DS", measure:77.45},{group:"Adventure", category:"3DS", measure:4.81},{group:"Misc", category:"WiiU", measure:12.23},{group:"Puzzle", category:"PC", measure:0.92},{group:"Sports", category:"2600", measure:3.43},{group:"Strategy", category:"SCD", measure:0.14},{group:"Strategy", category:"PSV", measure:0.31},{group:"Adventure", category:"Wii", measure:18.43},{group:"Fighting", category:"XOne", measure:2.31},{group:"Simulation", category:"3DS", measure:27.08},{group:"Platform", category:"SNES", measure:65.65},{group:"Strategy", category:"N64", measure:10.33},{group:"Puzzle", category:"GB", measure:47.47},{group:"Simulation", category:"PS4", measure:0.77},{group:"Simulation", category:"PS2", measure:42.66},{group:"Strategy", category:"XB", measure:2.78},{group:"Platform", category:"PS4", measure:7.01},{group:"Role-Playing", category:"PSV", measure:13.39},{group:"Simulation", category:"SNES", measure:5.63},{group:"Adventure", category:"NES", measure:4.38},{group:"Sports", category:"PC", measure:12.01},{group:"Strategy", category:"3DS", measure:2.09},{group:"Misc", category:"2600", measure:3.58},{group:"Adventure", category:"GC", measure:5.93},{group:"Fighting", category:"DC", measure:1.83},{group:"Racing", category:"GB", measure:4.55},{group:"Sports", category:"PS2", measure:273.41},{group:"Puzzle", category:"Wii", measure:15.67},{group:"Misc", category:"GB", measure:13.35},{group:"Role-Playing", category:"X360", measure:71.98},{group:"Sports", category:"PSP", measure:41.69},{group:"Racing", category:"SCD", measure:0.07},{group:"Adventure", category:"SAT", measure:3.63},{group:"Misc", category:"DS", measure:136.73},{group:"Puzzle", category:"2600", measure:14.68},{group:"Shooter", category:"PC", measure:45.09},{group:"Sports", category:"3DS", measure:6.2},{group:"Sports", category:"SAT", measure:2.79},{group:"Sports", category:"GEN", measure:3.2},{group:"Fighting", category:"N64", measure:22.08},{group:"Platform", category:"GB", measure:54.91},{group:"Role-Playing", category:"XOne", measure:9.48},{group:"Strategy", category:"DS", measure:15.32},{group:"Fighting", category:"GBA", measure:4.21},{group:"Misc", category:"PS4", measure:7.4},{group:"Role-Playing", category:"PS2", measure:93.21},{group:"Simulation", category:"DS", measure:131.91},{group:"Racing", category:"Wii", measure:61.28},{group:"Racing", category:"3DS", measure:14.49},{group:"Adventure", category:"WiiU", measure:0.17},{group:"Fighting", category:"PS3", measure:51.69},{group:"Puzzle", category:"N64", measure:3.41},{group:"Shooter", category:"PS2", measure:107.93},{group:"Simulation", category:"PS3", measure:10.79},{group:"Platform", category:"NES", measure:95.78},{group:"Puzzle", category:"NES", measure:21.0},{group:"Puzzle", category:"X360", measure:0.85},{group:"Strategy", category:"SNES", measure:4.98},{group:"Puzzle", category:"PS3", measure:0.6},{group:"Platform", category:"X360", measure:11.39},{group:"Misc", category:"PS3", measure:47.85},{group:"Role-Playing", category:"DC", measure:0.68},{group:"Strategy", category:"PS4", measure:0.41},{group:"Strategy", category:"PC", measure:45.16},{group:"Misc", category:"XOne", measure:6.86},{group:"Sports", category:"XB", measure:54.27},{group:"Simulation", category:"SAT", measure:1.13},{group:"Role-Playing", category:"SNES", measure:36.43},{group:"Shooter", category:"XB", measure:63.55},{group:"Racing", category:"PSV", measure:2.95},{group:"Fighting", category:"PSV", measure:3.15},{group:"Strategy", category:"Wii", measure:5.23},{group:"Strategy", category:"XOne", measure:0.38},{group:"Racing", category:"PS3", measure:73.95},{group:"Role-Playing", category:"PS3", measure:75.3},{group:"Fighting", category:"NES", measure:6.54},{group:"Action", category:"2600", measure:29.34},{group:"Racing", category:"SNES", measure:13.49},{group:"Puzzle", category:"WiiU", measure:1.33},{group:"Shooter", category:"GB", measure:1.2},{group:"Shooter", category:"PS4", measure:75.32},{group:"Misc", category:"NES", measure:3.59},{group:"Puzzle", category:"DS", measure:84.29},{group:"Role-Playing", category:"3DS", measure:75.74},{group:"Simulation", category:"XOne", measure:0.54},{group:"Strategy", category:"WiiU", measure:1.24},{group:"Action", category:"DS", measure:115.35},{group:"Strategy", category:"GBA", measure:7.45},{group:"Simulation", category:"DC", measure:0.52},{group:"Action", category:"N64", measure:29.58},{group:"Role-Playing", category:"PC", measure:47.78},{group:"Racing", category:"PS4", measure:11.53},{group:"Sports", category:"PSV", measure:4.88},{group:"Role-Playing", category:"SCD", measure:0.06},{group:"Simulation", category:"GB", measure:3.55},{group:"Racing", category:"X360", measure:65.99},{group:"Simulation", category:"WiiU", measure:0.21},{group:"Sports", category:"N64", measure:32.8},{group:"Shooter", category:"DC", measure:0.33},{group:"Role-Playing", category:"N64", measure:3.36},{group:"Misc", category:"SAT", measure:1.2},{group:"Role-Playing", category:"SAT", measure:3.76},{group:"Shooter", category:"Wii", measure:28.18},{group:"Puzzle", category:"GC", measure:3.99},{group:"Strategy", category:"GEN", measure:0.19},{group:"Fighting", category:"Wii", measure:23.86},{group:"Adventure", category:"DC", measure:2.11},{group:"Platform", category:"PC", measure:0.49},{group:"Platform", category:"XB", measure:9.64},{group:"Shooter", category:"X360", measure:276.77},{group:"Misc", category:"PC", measure:8.56},{group:"Adventure", category:"DS", measure:46.57},{group:"Racing", category:"SAT", measure:2.4},{group:"Platform", category:"3DS", measure:32.16},{group:"Adventure", category:"2600", measure:1.7},{group:"Role-Playing", category:"GBA", measure:64.21},{group:"Racing", category:"XOne", measure:8.8},{group:"Platform", category:"GEN", measure:15.45},{group:"Action", category:"SNES", measure:10.08},{group:"Role-Playing", category:"WiiU", measure:2.47},{group:"Role-Playing", category:"PSP", measure:48.67},{group:"Role-Playing", category:"GEN", measure:0.13},{group:"Misc", category:"GBA", measure:35.74},{group:"Simulation", category:"X360", measure:14.45},{group:"Simulation", category:"PSV", measure:0.08},{group:"Action", category:"XOne", measure:33.79},{group:"Action", category:"WiiU", measure:19.35},{group:"Adventure", category:"PC", measure:10.04},{group:"Adventure", category:"PS2", measure:20.75},{group:"Simulation", category:"2600", measure:0.45},{group:"Platform", category:"GC", measure:28.04},{group:"Platform", category:"PS2", measure:72.1},{group:"Adventure", category:"PSV", measure:4.16},{group:"Misc", category:"GEN", measure:0.03},{group:"Racing", category:"PSP", measure:34.73},{group:"Shooter", category:"2600", measure:26.48},{group:"Action", category:"GB", measure:7.92},{group:"Puzzle", category:"SAT", measure:1.0},{group:"Adventure", category:"GEN", measure:0.19},{group:"Misc", category:"SNES", measure:5.02},{group:"Adventure", category:"XOne", measure:2.51},{group:"Sports", category:"GBA", measure:16.41},{group:"Shooter", category:"3DS", measure:1.29},{group:"Platform", category:"PSV", measure:3.03},{group:"Puzzle", category:"PSP", measure:5.52},{group:"Action", category:"SAT", measure:0.65},{group:"Simulation", category:"XB", measure:7.11},{group:"Simulation", category:"N64", measure:8.36},{group:"Racing", category:"GBA", measure:18.8},{group:"Action", category:"3DS", measure:57.01},{group:"Misc", category:"XB", measure:9.32},{group:"Adventure", category:"GB", measure:17.16},{group:"Platform", category:"SCD", measure:1.5},{group:"Role-Playing", category:"PS4", measure:25.77},{group:"Fighting", category:"WiiU", measure:6.36},{group:"Strategy", category:"PS2", measure:15.15},{group:"Strategy", category:"X360", measure:10.13}];
+// set initial group value
+var group = "Role-Playing";
+function datasetBarChosen(group) {
+  var ds = [];
+  for (x in datasetBarChart) {
+     if(datasetBarChart[x].group==group){
+      ds.push(datasetBarChart[x]);
+     } 
+    }
+  return ds;
+}
+function dsBarChartBasics() {
+    var margin = {top: 40, right: 5, bottom: 50, left: 50},
+    width = 1000 - margin.left - margin.right,
+     height = 250 - margin.top - margin.bottom,
+    colorBar = d3.scale.category20(),
+    barPadding = 4
+    ;
+    
+    return {
+      margin : margin, 
+      width : width, 
+      height : height, 
+      colorBar : colorBar, 
+      barPadding : barPadding
+    }     
+    ;
+}
+function dsBarChart() {
+  var firstDatasetBarChart = datasetBarChosen(group);           
+  
+  var basics = dsBarChartBasics();
+  
+  var margin = basics.margin,
+    width = basics.width,
+     height = basics.height,
+    colorBar = basics.colorBar,
+    barPadding = basics.barPadding
+    ;
+          
+  var   xScale = d3.scale.linear()
+            .domain([0, firstDatasetBarChart.length])
+            .range([0, width])
+            ;
+            
+  // Create linear y scale 
+  // Purpose: No matter what the data is, the bar should fit into the svg area; bars should not
+  // get higher than the svg height. Hence incoming data needs to be scaled to fit into the svg area.  
+  var yScale = d3.scale.linear()
+      // use the max funtion to derive end point of the domain (max value of the dataset)
+      // do not use the min value of the dataset as min of the domain as otherwise you will not see the first bar
+       .domain([0, d3.max(firstDatasetBarChart, function(d) { return d.measure; })])
+       // As coordinates are always defined from the top left corner, the y position of the bar
+       // is the svg height minus the data value. So you basically draw the bar starting from the top. 
+       // To have the y position calculated by the range function
+       .range([height, 0])
+       ;
+  
+  //Create SVG element
+  
+  var svg = d3.select("#barChart")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .attr("id","barChartPlot")
+        ;
+  
+  var plot = svg
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        ;
+              
+  plot.selectAll("rect")
+       .data(firstDatasetBarChart)
+       .enter()
+       .append("rect")
+      .attr("x", function(d, i) {
+          return xScale(i);
+      })
+       .attr("width", width / firstDatasetBarChart.length - barPadding)   
+      .attr("y", function(d) {
+          return yScale(d.measure);
+      })  
+      .attr("height", function(d) {
+          return height-yScale(d.measure);
+      })
+      .attr("fill", "grey")
+      ;
+  
+    
+  // Add y labels to plot 
+  
+  plot.selectAll("text")
+  .data(firstDatasetBarChart)
+  .enter()
+  .append("text")
+  .text(function(d) {
+      return formatAsInteger(d3.round(d.measure));
+  })
+  .attr("text-anchor", "middle")
+  // Set x position to the left edge of each bar plus half the bar width
+  .attr("x", function(d, i) {
+      return (i * (width / firstDatasetBarChart.length)) + ((width / firstDatasetBarChart.length - barPadding) / 2);
+  })
+  .attr("y", function(d) {
+      return yScale(d.measure) - 5;
+  })
+  .attr("class", "yAxis")
+  ;
+  
+  // Add x labels to chart  
+  
+  var xLabels = svg
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + (margin.top + height)  + ")")
+        ;
+  
+  xLabels.selectAll("text.xAxis")
+      .data(firstDatasetBarChart)
+      .enter()
+      .append("text")
+      .text(function(d) { return d.category;})
+      .attr("text-anchor", "middle")
+      // Set x position to the left edge of each bar plus half the bar width
+               .attr("x", function(d, i) {
+                  return (i * (width / firstDatasetBarChart.length)) + ((width / firstDatasetBarChart.length - barPadding) / 2);
+               })
+      .attr("y", 15)
+      .attr("class", "xAxis")
+      ;     
+   
+  // Title
+  
+  svg.append("text")
+    .attr("x", (width + margin.left + margin.right)/2)
+    .attr("y", 15)
+    .attr("class","title")        
+    .attr("text-anchor", "middle")
+    .text("Global Sales Breakdown (Platform Wise (in millions $))")
+    ;
+  svg.append("text")
+    .attr("x", (width + margin.left + margin.right)/2)
+    .attr("y", 245)
+    .attr("class","xAxis")        
+    .attr("text-anchor", "middle")
+    .text("Gaming Platform")
+    ;
+}
+dsBarChart();
+ /* ** UPDATE CHART ** */
+ 
+/* updates bar chart on request */
+function updateBarChart(group, colorChosen) {
+  
+    var currentDatasetBarChart = datasetBarChosen(group);
+    
+    var basics = dsBarChartBasics();
+  
+    var margin = basics.margin,
+      width = basics.width,
+       height = basics.height,
+      colorBar = basics.colorBar,
+      barPadding = basics.barPadding
+      ;
+    
+    var   xScale = d3.scale.linear()
+      .domain([0, currentDatasetBarChart.length])
+      .range([0, width])
+      ;
+    
+      
+    var yScale = d3.scale.linear()
+        .domain([0, d3.max(currentDatasetBarChart, function(d) { return d.measure; })])
+        .range([height,0])
+        ;
+        
+     var svg = d3.select("#barChart svg");
+        
+     var plot = d3.select("#barChartPlot")
+      .datum(currentDatasetBarChart)
+       ;
+  
+        /* Note that here we only have to select the elements - no more appending! */
+      plot.selectAll("rect")
+        .data(currentDatasetBarChart)
+        .transition()
+      .duration(750)
+      .attr("x", function(d, i) {
+          return xScale(i);
+      })
+       .attr("width", width / currentDatasetBarChart.length - barPadding)   
+      .attr("y", function(d) {
+          return yScale(d.measure);
+      })  
+      .attr("height", function(d) {
+          return height-yScale(d.measure);
+      })
+      .attr("fill", colorChosen)
+      ;
+    
+    plot.selectAll("text.yAxis") // target the text element(s) which has a yAxis class defined
+      .data(currentDatasetBarChart)
+      .transition()
+      .duration(750)
+       .attr("text-anchor", "middle")
+       .attr("x", function(d, i) {
+          return (i * (width / currentDatasetBarChart.length)) + ((width / currentDatasetBarChart.length - barPadding) / 2);
+       })
+       .attr("y", function(d) {
+          return yScale(d.measure) - 5;
+       })
+       .text(function(d) {
+        return formatAsInteger(d3.round(d.measure));
+       })
+       .attr("class", "yAxis")          
+    ;
+    
+    svg.selectAll("text.title") // target the text element(s) which has a title class defined
+      .attr("x", (width + margin.left + margin.right)/2)
+      .attr("y", 15)
+      .attr("class","title")        
+      .attr("text-anchor", "middle")
+      .text(group + "'s Sales Breakdown (Platform wise)")
+    ;
+}
+ 
+ 
+/* updates bar chart on request */
+function updateLineChart(group, colorChosen) {
+  var currentDatasetLineChart = datasetLineChartChosen(group);   
+  var basics = dsLineChartBasics();
+  
+  var margin = basics.margin,
+    width = basics.width,
+     height = basics.height
+    ;
+  var xScale = d3.scale.linear()
+      .domain([0, currentDatasetLineChart.length-1])
+      .range([0, width])
+      ;
+  var yScale = d3.scale.linear()
+      .domain([0, d3.max(currentDatasetLineChart, function(d) { return d.measure; })])
+      .range([height, 0])
+      ;
+  
+  var line = d3.svg.line()
+    .x(function(d, i) { return xScale(i); })
+    .y(function(d) { return yScale(d.measure); })
+    ;
+   var plot = d3.select("#lineChartPlot")
+    .datum(currentDatasetLineChart)
+     ;
+     
+  /* descriptive titles as part of plot -- start */
+  var dsLength=currentDatasetLineChart.length;
+  
+  plot.select("text")
+    .text("Performance in 2015: "+currentDatasetLineChart[dsLength-1].measure)
+    ;
+  /* descriptive titles -- end */
+     
+  plot
+  .select("path")
+    .transition()
+    .duration(750)          
+     .attr("class", "line")
+     .attr("d", line) 
+     // add color
+    .attr("stroke", colorChosen)
+     ;
+     
+  var path = plot
+    .selectAll(".dot")
+     .data(currentDatasetLineChart)
+     .transition()
+    .duration(750)
+     .attr("class", "dot")
+     .attr("fill", function (d) { return d.measure==d3.min(currentDatasetLineChart, function(d) { return d.measure; }) ? "red" : (d.measure==d3.max(currentDatasetLineChart, function(d) { return d.measure; }) ? "green" : "white") } )
+     .attr("cx", line.x())
+     .attr("cy", line.y())
+     .attr("r", 3.5)
+     // add color
+    .attr("stroke", colorChosen)
+     ;
+    path.selectAll(".dot")
+        .on("mouseover", function(d) {    
+            div.transition()    
+                .duration(200)    
+                .style("opacity", .9);    
+            div .html("Year: "+d.category + "<br/>"+ "Sales: " + d.measure + " ( mil. $ )")  
+                .style("left", (d3.event.pageX) + "px")   
+                .style("top", (d3.event.pageY) + "px");  
+            })          
+        .on("mouseout", function(d) {   
+            div.transition()    
+                .duration(500)    
+                .style("opacity", 0); 
+        });
+     
+     path
+     .selectAll("title")
+     .text(function(d) { return d.category + ": " + formatAsInteger(d.measure); })   
+     ;  
+}
+    </script>
+  </body>
+</html>

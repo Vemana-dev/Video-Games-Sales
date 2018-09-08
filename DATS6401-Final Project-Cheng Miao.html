@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>DATS 6401 - Final Project - Cheng Miao</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  
+  <style>
+    body {
+      background-color: linen;
+      font-family: Georgia, serif;
+      margin-bottom: 100px;
+    }
+    h1 {
+      color: maroon;
+      margin-left: auto;
+      margin-right:auto;
+    }
+    
+    h2 {
+      font-size: 22px;
+      margin-left: auto;
+      margin-right:auto;
+    }
+    
+    
+    h4 {
+      font-family: Verdana, sans-serif;
+      margin-left: auto;
+      margin-right:auto;
+    }
+    
+    div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 60px;					
+    height: 28px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightsteelblue;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+    }
+    
+    img { 
+    width:50%;
+    margin-top: 10px;
+    margin-left: 10px; 
+    margin-bottom: 10px;
+    }
+    
+    
+    svg {
+      width: 1200px;
+      height:700px;
+            }
+    .line {
+      fill: none;
+      stroke-width: 2px;
+    }
+    hr { 
+      background-color: maroon; height: 1px; border: 0; 
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Video Game Sales - Cheng Miao</h1>
+  <ul class="nav nav-tabs">
+    <li class="active"><a class="home" href="#home">Home</a></li>
+    <li><a class="menu1" href="#menu1">d3 First</a></li>
+    <li><a class="menu2" href="#menu2">d3 Second</a></li>
+    <li><a class="menu3" href="#menu3">Google API</a></li>
+    <li><a class="menu4" href="#menu4">Summary</a></li>
+  </ul>
+
+  <div class="tab-content">
+    <div id="home" class="tab-pane fade in active">
+      
+      <h2>Introduction and Object</h2>
+      <br>
+      <p>This project uses a variety of data visualization tools to represent the relationship between the features of video game sales, game types, player ratings, and year of release. Use these tools to make advanced, beautiful, and easy-to-understand data visualization charts.</p>
+      <br>
+      <p>* This picture shows the correlation between features. This picture is from Python</p>
+      <img src="correlation.png" alt="Correlation View">
+      <br>
+      <hr>
+      <p>* Here is starting the Tableau visulization work for video games</p>
+      <div class='tableauPlaceholder' id='viz1525723962901' style='position: relative'><noscript><a href='#'><img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Fi&#47;Final-tableau-ChengMiao&#47;GSGeinRate&#47;1_rss.png' style='border: none' /></a></noscript>
+      <object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='Final-tableau-ChengMiao&#47;GSGeinRate' /><param name='tabs' value='yes' />
+      <param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Fi&#47;Final-tableau-ChengMiao&#47;GSGeinRate&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' />
+      <param name='display_overlay' value='yes' /><param name='display_count' value='yes' /></object></div>
+      <script type='text/javascript'>
+      var divElement = document.getElementById('viz1525723962901');
+      var vizElement = divElement.getElementsByTagName('object')[0];
+          vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.5)+'px';
+      var scriptElement = document.createElement('script');
+          scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+          vizElement.parentNode.insertBefore(scriptElement, vizElement);
+      </script>
+      <br>
+      <br>
+    </div>
+    <div id="menu1" class="tab-pane fade">
+      <br>
+      <h3> Global Sales</h3>
+      <p>This tab shows the Games Global Sales Top 5 for Year of Release. As we can see, Nintendo in Red, Acitivison in Black, Electronic Arts in Blue, Take Two Interactive in Green and Sony Computer in Orange. Nintendo has a good sales from 2000-2016, other four Publishers have a stable sales in these years.
+      If I try to plot all the Publishers, the graph will messy. The legend of each line is on the right side which is in order.</p>
+      <br>
+      <br>
+      <acontent></acontent>
+      <br>
+      </div>
+
+    <div id="menu2" class="tab-pane fade">
+      <br>
+      <p>Those two graphs are drawn by "d3.js". The first graph shows the pie chart of Game's genre. There are 12 types in the graphs.
+      The second graph below is Platform's Sales. If want to see each genre sales in every platform, could click each element on pie chart.</p>
+      <hr>
+      <object style="border:0px" type="text/x-scriptlet" data="d3second.html" width=100% height=1200>
+      </object>
+      </div>
+
+    <div id="menu3" class="tab-pane fade">
+      <br>
+      <object style="border:0px" type="text/x-scriptlet" data="googleapi.html" width=1000px height=1200>
+      </object>
+      </div>
+
+    <div id="menu4" class="tab-pane fade">
+      <br>
+      <h3>Conclusion</h3>
+      <br>
+      <p>In terms of sales volume, the game is loved by the general public and the trend is increasing year by year. Microsoft, Sony and Nintendo have very good sales. This project uses a lot of tools to visualize the data, d3, Google API and Tableau give the beautiful data visulization.</p>
+      <p>* Through all the explorations, Nintendo has achieved outstanding sales worldwide.</p>
+      <p>* Different kinds of games, global sales are also different, and the rating is also different. The most prominent performance is the action game.</p>
+      <p>* Different kinds of games also have different sales, and the action games have high sales.</p>
+      <p>* User socre has a linear relationship with critic score. As the user score increases, the critic score also increases.</p>
+      <p>* The most prominent genre is sproting of North American sales and global sales graph. It may further be seen that sporting is very popular in the United States, and the American people may prefer sports games.</p>
+      <p>* In the user score and game boxplot, the performance of each game category is averaged.</p>
+      <p>* The most popular is wii sports games, GTA ranked second.</p>
+      <p>* At the same time, each game has different sales at different ratings, and most of the games with high ratings will have relatively better sales.</p>
+      <p>* The last graph is the score of each developer's user experience, Nintendo's highest, most popular.</p>
+      <p>Good Learning Experience</p>
+      <br>
+    </div>
+
+  </div>
+</div>
+
+      
+      <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+      <script src="http://d3js.org/d3.v4.js"></script>
+      <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
+
+      <script>
+      $(document).ready(function(){
+          $(".nav-tabs a").click(function(){
+              $(this).tab('show');
+          });
+      });
+      </script>
+
+      <script>
+          $.ajaxSetup ({
+              // Disable caching of AJAX responses
+              // Used when debugging
+              cache: false
+          });
+        
+          $(".menu1").click(function() {
+              $.getScript("gstop5.js");
+          })
+      </script>
+
+</body>
+</html>
